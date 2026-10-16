@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Control Excavadora IoT</title>
+    <style>
+        /* Fondo cargado desde archivo local */
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #5c94fc;
+            background-image: url('Fondo.jpg');
+            background-size: cover;
+            background-position: center bottom;
+            background-attachment: fixed;
+            color: #fff;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .header-container {
+            background-color: rgba(0, 0, 0, 0.85);
+            border: 4px solid #fff;
+            display: inline-block;
+            padding: 10px 40px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            box-shadow: 5px 5px 0px rgba(0, 0, 0, 0.6);
+        }
+
+        h2 {
+            margin: 5px 0 0 0;
+            font-size: 1.3em;
+            color: #f1c40f;
+            text-shadow: 2px 2px #000;
+            letter-spacing: 1px;
+        }
+
+        /* Chasis del control */
+        .remote-body {
+            background-color: #e69138;
+            border-radius: 20px 20px 40px 40px;
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+            box-shadow: inset -5px -5px 0px rgba(0, 0, 0, 0.3), inset 5px 5px 0px rgba(255, 255, 255, 0.3), 10px 10px 0px rgba(0, 0, 0, 0.7);
+            border: 5px solid #222;
+            padding: 25px 30px;
+        }
+
+        .top-plate {
+            background-color: #222;
+            color: #f1c40f;
+            width: 300px;
+            margin: -25px auto 25px auto;
+            padding: 12px;
+            border-radius: 0 0 15px 15px;
+            font-weight: 900;
+            font-size: 26px;
+            border-bottom: 4px solid #000;
+            text-shadow: 2px 2px #000;
+            letter-spacing: 2px;
+        }
+
+        .control-grid {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 15px;
+            margin-bottom: 30px;
+        }
+
+        /* Joysticks Negros (Aros) */
+        .d-pad-ring {
+            background-color: #222;
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            position: relative;
+            box-shadow: inset 5px 5px 10px rgba(0, 0, 0, 0.8), 5px 5px 0px rgba(0, 0, 0, 0.3);
+            border: 4px solid #111;
+        }
+
+        .d-pad-hole {
+            background-color: #e69138;
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: inset -3px -3px 0px rgba(0, 0, 0, 0.3), inset 3px 3px 0px rgba(255, 255, 255, 0.3);
+            border: 4px solid #111;
+        }
+
+        /* Botones de los aros */
+        .btn {
+            background: transparent;
+            color: #fff;
+            border: none;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            font-size: 15px;
+            position: absolute;
+            cursor: pointer;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            text-shadow: 2px 2px #000;
+            transition: transform 0.1s;
+        }
+
+        .btn-up {
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .btn-up:active {
+            transform: translate(-50%, -8px) scale(0.95);
+        }
+
+        .btn-down {
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .btn-down:active {
+            transform: translate(-50%, 8px) scale(0.95);
+        }
+
+        .btn-left {
+            left: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .btn-left:active {
+            transform: translate(-8px, -50%) scale(0.95);
+        }
+
+        .btn-right {
+            right: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .btn-right:active {
+            transform: translate(8px, -50%) scale(0.95);
+        }
+
+        /* Panel Central */
+        .center-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-around;
+            height: 200px;
+            width: 160px;
+        }
+
+        .btn-center {
+            background-color: #333;
+            border: 4px solid #111;
+            color: #fff;
+            font-family: 'Courier New', Courier, monospace;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 4px 4px 0 #111;
+            font-weight: bold;
+            font-size: 15px;
+            text-shadow: 2px 2px #000;
+            transition: 0.1s;
+        }
+
+        .btn-center:active {
+            transform: translate(4px, 4px);
+            box-shadow: 0 0 0 #111;
+        }
+
+        /* Botón de Encendido (Toggle) - Rojo por defecto */
+        #btn-6 {
+            padding: 20px;
+            border-radius: 12px;
+            background-color: #c0392b;
+            border-color: #8b0000;
+            font-size: 18px;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+
+        /* Clase para cuando está encendido */
+        #btn-6.encendido {
+            background-color: #2ecc71 !important;
+            border-color: #27ae60 !important;
+            box-shadow: 0 0 20px #2ecc71, 4px 4px 0 #111 !important;
+            color: #fff !important;
+        }
+
+        .aux-cluster {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 10px;
+            width: 100%;
+        }
+
+        #btn-7 {
+            grid-column: 1 / span 2;
+            padding: 12px;
+        }
+
+        #btn-5 {
+            padding: 12px;
+        }
+
+        #btn-8 {
+            padding: 12px;
+        }
+
+        /* Botón Detener */
+        .bottom-plate {
+            background-color: #222;
+            margin: 0 auto -25px auto;
+            width: 400px;
+            padding: 20px;
+            border-radius: 20px 20px 0 0;
+            clip-path: polygon(10% 0, 90% 0, 100% 100%, 0 100%);
+            border-top: 5px solid #111;
+        }
+
+        #btn-13 {
+            background-color: #e74c3c;
+            color: white;
+            font-family: 'Courier New', Courier, monospace;
+            border: 4px solid #c0392b;
+            width: 85%;
+            padding: 16px;
+            font-size: 22px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 4px 4px 0 #8b0000;
+            text-shadow: 2px 2px #000;
+            transition: 0.1s;
+        }
+
+        #btn-13:active {
+            transform: translate(4px, 4px);
+            box-shadow: 0 0 0 #8b0000;
+        }
+
+        .activo {
+            color: #0f0 !important;
+            text-shadow: 0 0 10px #0f0, 2px 2px #000 !important;
+        }
+
+        /* El btn-6 ya no usa la clase 'activo' general, tiene su propia clase 'encendido' */
+        .btn-center:not(#btn-6).activo,
+        #btn-13.activo {
+            background-color: #2ecc71 !important;
+            border-color: #27ae60 !important;
+            color: #fff !important;
+            box-shadow: 0 0 20px #2ecc71, 4px 4px 0 #111 !important;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header-container">
+        <h2 id="estado-actual">ESPERANDO CONEXIÓN...</h2>
+    </div>
+
+    <div class="remote-body">
+
+        <div class="top-plate">
+            TRUCK
+        </div>
+
+        <div class="control-grid">
+
+            <div class="d-pad-ring">
+                <div class="d-pad-hole"></div>
+                <button id="btn-2" class="btn btn-up" onclick="enviarComando(2)">2 Adelante</button>
+                <button id="btn-3" class="btn btn-down" onclick="enviarComando(3)">3 Atras</button>
+                <button id="btn-1" class="btn btn-left" onclick="enviarComando(1)">1 Gira Izq</button>
+                <button id="btn-4" class="btn btn-right" onclick="enviarComando(4)">4 Gira Der</button>
+            </div>
+
+            <div class="center-panel">
+                <!-- Botón 6 ahora llama a toggleEncendido() -->
+                <button id="btn-6" class="btn-center" onclick="toggleEncendido()">6 Encendido</button>
+                <div class="aux-cluster">
+                    <button id="btn-7" class="btn-center" onclick="enviarComando(7)">7 Luz</button>
+                    <button id="btn-5" class="btn-center" onclick="enviarComando(5)">5 Sonido</button>
+                    <button id="btn-8" class="btn-center" onclick="enviarComando(8)">8 Aux</button>
+                </div>
+            </div>
+
+            <div class="d-pad-ring">
+                <div class="d-pad-hole"></div>
+                <button id="btn-10" class="btn btn-up" onclick="enviarComando(10)">10 Arriba</button>
+                <button id="btn-11" class="btn btn-down" onclick="enviarComando(11)">11 Abajo</button>
+                <button id="btn-9" class="btn btn-left" onclick="enviarComando(9)">9 Izquierda</button>
+                <button id="btn-12" class="btn btn-right" onclick="enviarComando(12)">12 Derecha</button>
+            </div>
+
+        </div>
+
+        <div class="bottom-plate">
+            <button id="btn-13" onclick="enviarComando(13)">13 DETENER TO DO</button>
+        </div>
+
+    </div>
+
+    <script>
+        const ws = new WebSocket("ws://localhost:8000/ws");
+        const estadoTexto = document.getElementById("estado-actual");
+
+        let sistemaEncendido = false;
+
+        const nombresAcciones = {
+            1: "GIRANDO IZQUIERDA",
+            2: "AVANZANDO",
+            3: "RETROCEDIENDO",
+            4: "GIRANDO DERECHA",
+            5: "SONIDO",
+            6: "ON/OFF",
+            7: "LUZ",
+            8: "MODO DEMO",
+            9: "BRAZO IZQUIERDA",
+            10: "GARRA ARRIBA",
+            11: "GARRA ABAJO",
+            12: "BRAZO DERECHA",
+            13: "DETENIDO"
+        };
+
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+
+            // Si el comando es 6, ignoramos la actualización del texto superior
+            if (data.status !== 6) {
+                const textoAccion = nombresAcciones[data.status] || "DETENIDO";
+                estadoTexto.innerText = "COMANDO ACTIVO: " + textoAccion;
+            }
+
+            // Apaga todos los botones EXCEPTO el 6 (que se maneja localmente)
+            for (let i = 1; i <= 13; i++) {
+                if (i !== 6) {
+                    const btn = document.getElementById("btn-" + i);
+                    if (btn) btn.classList.remove("activo");
+                }
+            }
+
+            // Enciende visualmente el botón activo (excepto si es el 6)
+            if (data.status !== 6) {
+                const btnActivo = document.getElementById("btn-" + data.status);
+                if (btnActivo) btnActivo.classList.add("activo");
+            }
+        };
+
+        function enviarComando(numero) {
+            fetch("http://localhost:8000/status", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ status: numero })
+            }).catch(error => {
+                console.error("Error de conexión:", error);
+                estadoTexto.innerText = "ERROR DE RED";
+            });
+        }
+
+        // Función especial para alternar el botón 6
+        function toggleEncendido() {
+            sistemaEncendido = !sistemaEncendido;
+            const btn6 = document.getElementById("btn-6");
+
+            if (sistemaEncendido) {
+                btn6.classList.add("encendido");
+            } else {
+                btn6.classList.remove("encendido");
+            }
+
+            // Enviamos el comando 6 al servidor para que el ESP32 lo registre
+            enviarComando(6);
+        }
+    </script>
+</body>
+
+</html>
