@@ -1,10 +1,15 @@
-﻿import asyncio
+﻿import os
+import asyncio
+from fastapi.responses import HTMLResponse, FileResponse
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse  # <-- 1. Importa esto aquí arriba
+
 from app.models.schemas import *
 from app.services.db_service import DBService
 from app.websocket.websocket_manager import WebSocketManager
 
+# 2. Aquí se crea la variable 'app'
 app = FastAPI(title="API Excavadora IoT (21 SPs)", version="2.0")
 
 app.add_middleware(
@@ -13,7 +18,26 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+# Esta línea calcula dinámicamente la carpeta principal (afuera de 'app')
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+@app.get("/control", response_class=HTMLResponse, tags=["Interfaz Web"])
+def panel_control():
+    # Buscamos index.html en la carpeta principal
+    html_path = os.path.join(BASE_DIR, "index.html")
+    try:
+        with open(html_path, "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read(), status_code=200)
+    except FileNotFoundError:
+        return HTMLResponse(content=f"<h1>Error: No se encontró index.html</h1>", status_code=404)
+
+@app.get("/Fondo.jpg", include_in_schema=False)
+def obtener_fondo():
+    # Buscamos Fondo.jpg en la carpeta principal
+    img_path = os.path.join(BASE_DIR, "Fondo.jpg")
+    return FileResponse(img_path)
+
+# 4. El resto de tu código original continúa aquí abajo...
 db = DBService()
 ws_manager = WebSocketManager()
 active_demos = {}
