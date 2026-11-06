@@ -1,0 +1,66 @@
+body {
+    background-color: #5c94fc;
+    background-image: url('Fondo.jpg');
+    background-size: cover;
+    background-position: center bottom;
+    background-attachment: fixed;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.status-bar { border-bottom: 3px solid #f1c40f; }
+.indicator { text-align: center; }
+.indicator .badge { font-size: 0.9em; display: block; margin-bottom: 2px; }
+
+.remote-body {
+    background-color: #e69138;
+    border-radius: 20px;
+    max-width: 900px;
+    margin: 0 auto;
+    box-shadow: inset -5px -5px 0px rgba(0,0,0,0.3), inset 5px 5px 0px rgba(255,255,255,0.3), 10px 10px 0px rgba(0,0,0,0.7);
+    border: 5px solid #222;
+    padding: 25px;
+}
+
+.top-plate {
+    background-color: #222;
+    color: #f1c40f;
+    display: inline-block;
+    padding: 10px 30px;
+    border-radius: 0 0 15px 15px;
+    font-weight: 900;
+    font-size: 24px;
+    border-bottom: 4px solid #000;
+    box-shadow: 2px 2px #000;
+}
+
+/* Joysticks */
+.d-pad-ring {
+    background-color: #222;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    position: relative;
+    border: 4px solid #111;
+}
+.d-pad-hole {
+    background-color: #e69138;
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    border: 4px solid #111;
+}
+.joy-stick {
+    width: 70px; height: 70px;
+    background: radial-gradient(circle at 30% 30%, #fff, #aaa);
+    border-radius: 50%;
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 2px 5px 10px rgba(0,0,0,0.5);
+    cursor: grab;
+    z-index: 10;
+}
+.joy-stick:active { cursor: grabbing; }
+
+.credits { font-family: sans-serif; text-shadow: 1px 1px 2px #000; }
