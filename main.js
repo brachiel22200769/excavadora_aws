@@ -1,4 +1,5 @@
 // Importamos funciones del módulo API
+import { CONFIG } from './config.js';
 import { enviarComando, obtenerDemos, checkApiHealth } from './api.js';
 
 const VEHICULO_ID = 1;
