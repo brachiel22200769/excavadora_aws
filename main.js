@@ -59,13 +59,30 @@ monitorearSalud();
 // 3. CARGAR CATÁLOGO DE DEMOS
 // ==========================================
 async function cargarDemos() {
-    const select = document.getElementById('demoSelect');
-    const demos = await obtenerDemos(VEHICULO_ID);
-    
-    select.innerHTML = '<option value="">Seleccione una DEMO...</option>';
-    demos.forEach(d => {
-        select.innerHTML += `<option value="${d.id_demo}">${d.nombre}</option>`;
-    });
+    try {
+        const resp = await fetch('https://mutual-spearhead-factoid.ngrok-free.dev/api/vehiculos/1/demos', {
+            method: 'GET',
+            headers: {
+                'ngrok-skip-browser-warning': '69420', // Obligatorio para saltar la pantalla de ngrok
+                'Accept': 'application/json'           // Le dice a ngrok que somos un sistema, no un humano
+            }
+        });
+        
+        if (!resp.ok) throw new Error("Error en red");
+        const demos = await resp.json();
+        
+        const select = document.querySelector('.demo-select');
+        select.innerHTML = '<option value="">Seleccione una DEMO...</option>';
+        
+        demos.forEach(demo => {
+            let opt = document.createElement('option');
+            opt.value = demo.id_demo;
+            opt.text = `${demo.id_demo} - ${demo.nombre}`;
+            select.appendChild(opt);
+        });
+    } catch (error) {
+        console.error("Fallo al cargar las demos:", error);
+    }
 }
 cargarDemos();
 
