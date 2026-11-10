@@ -135,3 +135,71 @@ function configurarJoystick(elementId, mapeoComandos) {
 // Inicializar joysticks con tus reglas invertidas/corregidas
 configurarJoystick('joyLeft', { up: 2, down: 3, left: 4, right: 1 });
 configurarJoystick('joyRight', { up: 10, down: 11, left: 9, right: 12 });
+
+// ==========================================
+// CONTROL DEL CATÁLOGO DE DEMOS
+// ==========================================
+
+// 1. Función para descargar las demos de la base de datos y llenar el Select
+async function cargarDemos() {
+    try {
+        const resp = await fetch(`${CONFIG.API_BASE}/vehiculos/${CONFIG.VEHICULO_ID}/demos`, {
+            // ¡El header de ngrok es obligatorio aquí también!
+            headers: { 'ngrok-skip-browser-warning': 'true' } 
+        });
+        
+        if (!resp.ok) throw new Error("Error en red");
+        const demos = await resp.json();
+        
+        const select = document.querySelector('.demo-select');
+        select.innerHTML = '<option value="">Seleccione una DEMO...</option>'; // Limpia la lista
+        
+        // Inserta cada demo en la lista desplegable
+        demos.forEach(demo => {
+            let opt = document.createElement('option');
+            opt.value = demo.id_demo;
+            opt.text = `${demo.id_demo} - ${demo.nombre}`;
+            select.appendChild(opt);
+        });
+    } catch (error) {
+        console.error("Fallo al cargar las demos:", error);
+    }
+}
+
+// 2. Ejecutar la función apenas cargue la página
+document.addEventListener('DOMContentLoaded', () => {
+    cargarDemos();
+});
+
+// 3. Darle vida al botón verde (EJECUTAR)
+document.querySelector('.btn-play').addEventListener('click', async () => {
+    const idDemo = document.querySelector('.demo-select').value;
+    
+    if (!idDemo) {
+        alert("Selecciona una demo de la lista primero.");
+        return;
+    }
+
+    try {
+        await fetch(`${CONFIG.API_BASE}/vehiculos/${CONFIG.VEHICULO_ID}/demo/${idDemo}/iniciar`, {
+            method: 'POST',
+            headers: { 'ngrok-skip-browser-warning': 'true' }
+        });
+        console.log(`Demo ${idDemo} iniciada`);
+    } catch (e) {
+        console.error("Error al iniciar demo", e);
+    }
+});
+
+// 4. Darle vida al botón rojo (CANCELAR)
+document.querySelector('.btn-clear').addEventListener('click', async () => {
+    try {
+        await fetch(`${CONFIG.API_BASE}/vehiculos/${CONFIG.VEHICULO_ID}/demo/cancelar`, {
+            method: 'POST',
+            headers: { 'ngrok-skip-browser-warning': 'true' }
+        });
+        console.log("Demo cancelada");
+    } catch (e) {
+        console.error("Error al cancelar demo", e);
+    }
+});
