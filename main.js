@@ -55,14 +55,16 @@ setInterval(monitorearSalud, 10000); // Chequea cada 10 segundos
 monitorearSalud();
 
 // ==========================================
-// 3. CARGAR CATÁLOGO DE DEMOS
+// 3. CARGAR CATÁLOGO DE DEMOS (Proxy Fix)
 // ==========================================
 async function cargarDemos() {
     try {
-        const resp = await fetch('https://mutual-spearhead-factoid.ngrok-free.dev/api/vehiculos/1/demos', {
+        // Envolvemos la URL de Ngrok en el Proxy para destruir el bloqueo de CORS
+        const targetUrl = encodeURIComponent('https://mutual-spearhead-factoid.ngrok-free.dev/api/vehiculos/1/demos');
+        const resp = await fetch(`https://corsproxy.io/?${targetUrl}`, {
             method: 'GET',
             headers: {
-                'ngrok-skip-browser-warning': '69420',
+                'ngrok-skip-browser-warning': 'true',
                 'Accept': 'application/json'
             }
         });
@@ -153,7 +155,7 @@ configurarJoystick('joyLeft', { up: 2, down: 3, left: 4, right: 1 });
 configurarJoystick('joyRight', { up: 10, down: 11, left: 9, right: 12 });
 
 // ==========================================
-// 5. BOTONES DE EJECUCIÓN DE DEMOS
+// 5. BOTONES DE EJECUCIÓN DE DEMOS (Proxy Fix)
 // ==========================================
 document.querySelector('.btn-play').addEventListener('click', async () => {
     const idDemo = document.querySelector('.demo-select').value;
@@ -164,10 +166,11 @@ document.querySelector('.btn-play').addEventListener('click', async () => {
     }
 
     try {
-        await fetch(`https://mutual-spearhead-factoid.ngrok-free.dev/api/vehiculos/1/demo/${idDemo}/iniciar`, {
+        const targetUrl = encodeURIComponent(`https://mutual-spearhead-factoid.ngrok-free.dev/api/vehiculos/1/demo/${idDemo}/iniciar`);
+        await fetch(`https://corsproxy.io/?${targetUrl}`, {
             method: 'POST',
             headers: { 
-                'ngrok-skip-browser-warning': '69420',
+                'ngrok-skip-browser-warning': 'true',
                 'Accept': 'application/json' 
             }
         });
@@ -179,10 +182,11 @@ document.querySelector('.btn-play').addEventListener('click', async () => {
 
 document.querySelector('.btn-clear').addEventListener('click', async () => {
     try {
-        await fetch(`https://mutual-spearhead-factoid.ngrok-free.dev/api/vehiculos/1/demo/cancelar`, {
+        const targetUrl = encodeURIComponent(`https://mutual-spearhead-factoid.ngrok-free.dev/api/vehiculos/1/demo/cancelar`);
+        await fetch(`https://corsproxy.io/?${targetUrl}`, {
             method: 'POST',
             headers: { 
-                'ngrok-skip-browser-warning': '69420',
+                'ngrok-skip-browser-warning': 'true',
                 'Accept': 'application/json' 
             }
         });
