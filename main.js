@@ -45,7 +45,6 @@ async function monitorearSalud() {
     
     if (apiViva) {
         indApi.className = "badge bg-success"; indApi.innerText = "Disponible";
-        // Si la API responde, asumimos RDS disponible por ahora según reglas
         indRds.className = "badge bg-success"; indRds.innerText = "Disponible"; 
     } else {
         indApi.className = "badge bg-danger"; indApi.innerText = "No disponible";
@@ -63,8 +62,8 @@ async function cargarDemos() {
         const resp = await fetch('https://mutual-spearhead-factoid.ngrok-free.dev/api/vehiculos/1/demos', {
             method: 'GET',
             headers: {
-                'ngrok-skip-browser-warning': '69420', // Obligatorio para saltar la pantalla de ngrok
-                'Accept': 'application/json'           // Le dice a ngrok que somos un sistema, no un humano
+                'ngrok-skip-browser-warning': '69420',
+                'Accept': 'application/json'
             }
         });
         
@@ -84,7 +83,10 @@ async function cargarDemos() {
         console.error("Fallo al cargar las demos:", error);
     }
 }
-cargarDemos();
+
+document.addEventListener('DOMContentLoaded', () => {
+    cargarDemos();
+});
 
 // ==========================================
 // 4. LÓGICA DE BOTONES Y JOYSTICKS
@@ -94,11 +96,10 @@ document.getElementById('btn-7').addEventListener('click', () => enviarComando(V
 document.getElementById('btn-5').addEventListener('click', () => enviarComando(VEHICULO_ID, 5));
 document.getElementById('btn-8').addEventListener('click', () => enviarComando(VEHICULO_ID, 8));
 
-// Lógica base para joysticks táctiles/mouse
 function configurarJoystick(elementId, mapeoComandos) {
     const stick = document.getElementById(elementId);
     let active = false;
-    let currentCmd = 13; // Detenido
+    let currentCmd = 13; 
 
     const startDrag = () => active = true;
     const endDrag = () => {
@@ -106,7 +107,7 @@ function configurarJoystick(elementId, mapeoComandos) {
         stick.style.transform = `translate(-50%, -50%)`;
         if (currentCmd !== 13) {
             currentCmd = 13;
-            enviarComando(VEHICULO_ID, 13); // Comando prioritario al soltar
+            enviarComando(VEHICULO_ID, 13); 
         }
     };
 
@@ -121,14 +122,12 @@ function configurarJoystick(elementId, mapeoComandos) {
         let x = clientX - rect.left - (rect.width/2);
         let y = clientY - rect.top - (rect.height/2);
         
-        // Limitar radio del joystick
         const r = 50; 
         const dist = Math.sqrt(x*x + y*y);
         if (dist > r) { x = (x/dist)*r; y = (y/dist)*r; }
         
         stick.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
 
-        // Determinar cuadrante para enviar comando
         let newCmd = 13;
         if (y < -20) newCmd = mapeoComandos.up;
         else if (y > 20) newCmd = mapeoComandos.down;
@@ -150,46 +149,12 @@ function configurarJoystick(elementId, mapeoComandos) {
     window.addEventListener('touchmove', drag, {passive: false});
 }
 
-// Inicializar joysticks con tus reglas invertidas/corregidas
 configurarJoystick('joyLeft', { up: 2, down: 3, left: 4, right: 1 });
 configurarJoystick('joyRight', { up: 10, down: 11, left: 9, right: 12 });
 
 // ==========================================
-// CONTROL DEL CATÁLOGO DE DEMOS
+// 5. BOTONES DE EJECUCIÓN DE DEMOS
 // ==========================================
-
-// 1. Función para descargar las demos de la base de datos y llenar el Select
-async function cargarDemos() {
-    try {
-        const resp = await fetch(`${CONFIG.API_BASE}/vehiculos/${CONFIG.VEHICULO_ID}/demos`, {
-            // ¡El header de ngrok es obligatorio aquí también!
-            headers: { 'ngrok-skip-browser-warning': 'true' } 
-        });
-        
-        if (!resp.ok) throw new Error("Error en red");
-        const demos = await resp.json();
-        
-        const select = document.querySelector('.demo-select');
-        select.innerHTML = '<option value="">Seleccione una DEMO...</option>'; // Limpia la lista
-        
-        // Inserta cada demo en la lista desplegable
-        demos.forEach(demo => {
-            let opt = document.createElement('option');
-            opt.value = demo.id_demo;
-            opt.text = `${demo.id_demo} - ${demo.nombre}`;
-            select.appendChild(opt);
-        });
-    } catch (error) {
-        console.error("Fallo al cargar las demos:", error);
-    }
-}
-
-// 2. Ejecutar la función apenas cargue la página
-document.addEventListener('DOMContentLoaded', () => {
-    cargarDemos();
-});
-
-// 3. Darle vida al botón verde (EJECUTAR)
 document.querySelector('.btn-play').addEventListener('click', async () => {
     const idDemo = document.querySelector('.demo-select').value;
     
@@ -199,9 +164,12 @@ document.querySelector('.btn-play').addEventListener('click', async () => {
     }
 
     try {
-        await fetch(`${CONFIG.API_BASE}/vehiculos/${CONFIG.VEHICULO_ID}/demo/${idDemo}/iniciar`, {
+        await fetch(`https://mutual-spearhead-factoid.ngrok-free.dev/api/vehiculos/1/demo/${idDemo}/iniciar`, {
             method: 'POST',
-            headers: { 'ngrok-skip-browser-warning': 'true' }
+            headers: { 
+                'ngrok-skip-browser-warning': '69420',
+                'Accept': 'application/json' 
+            }
         });
         console.log(`Demo ${idDemo} iniciada`);
     } catch (e) {
@@ -209,12 +177,14 @@ document.querySelector('.btn-play').addEventListener('click', async () => {
     }
 });
 
-// 4. Darle vida al botón rojo (CANCELAR)
 document.querySelector('.btn-clear').addEventListener('click', async () => {
     try {
-        await fetch(`${CONFIG.API_BASE}/vehiculos/${CONFIG.VEHICULO_ID}/demo/cancelar`, {
+        await fetch(`https://mutual-spearhead-factoid.ngrok-free.dev/api/vehiculos/1/demo/cancelar`, {
             method: 'POST',
-            headers: { 'ngrok-skip-browser-warning': 'true' }
+            headers: { 
+                'ngrok-skip-browser-warning': '69420',
+                'Accept': 'application/json' 
+            }
         });
         console.log("Demo cancelada");
     } catch (e) {
