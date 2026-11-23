@@ -47,6 +47,12 @@ db = DBService()
 ws_manager = WebSocketManager()
 active_demos: dict[int, dict] = {}
 active_guest_timers: dict[str, asyncio.Task] = {}
+@app.on_event("startup")
+def inicializar_demos_default():
+    try:
+        db.asegurar_demos_vehiculos_existentes()
+    except Exception as e:
+        print(f"[WARN] No se pudieron verificar demos default al iniciar: {e}")
 
 # ==========================================
 # UTILIDADES INTERNAS
@@ -219,6 +225,7 @@ async def iniciar_modo_invitado(request: Request):
         )
 
     db.clonar_comandos_base(id_v)
+    db.asegurar_demo_default(id_v)
     token, jti, exp = crear_token_invitado(id_v)
     ip_origen = request.client.host if request.client else None
 
@@ -309,6 +316,7 @@ def crear_vehiculo(req: VehiculoRequest, admin: dict = Depends(require_admin)):
     nuevo_id = res.get("id_vehiculo") if isinstance(res, dict) else None
     if nuevo_id:
         db.clonar_comandos_base(nuevo_id)
+        db.asegurar_demo_default(nuevo_id)
         db.registrar_auditoria("CREAR_VEHICULO", "vehiculos", nuevo_id, f"Creó vehículo '{req.nombre}'", admin)
     return {"mensaje": "Vehículo creado", "id_vehiculo": nuevo_id}
 
@@ -425,6 +433,7 @@ def registrar_unidad_admin(req: UnidadAdminCreateRequest, admin: dict = Depends(
         raise HTTPException(409, "El número de serie ya está registrado.")
     nuevo_id = res["last_id"]
     db.clonar_comandos_base(nuevo_id)
+    db.asegurar_demo_default(nuevo_id)
     db.registrar_auditoria(
         "REGISTRAR_UNIDAD", "vehiculos", nuevo_id,
         f"Registró unidad '{req.nombre}' (Serie {req.numero_serie}, estado {req.estado_comercial})", admin,
@@ -504,6 +513,7 @@ async def cambiar_estado_comercial(id_vehiculo: int, req: CambiarEstadoRequest, 
     # Si pasa a EXHIBICION, aseguramos sus 13 comandos y limpiamos propietario para que no choque
     if req.estado_comercial == "EXHIBICION":
         db.clonar_comandos_base(id_vehiculo)
+        db.asegurar_demo_default(id_vehiculo)
 
     db.ejecutar_escritura(
         "UPDATE vehiculos SET estado_comercial = %s WHERE id_vehiculo = %s",

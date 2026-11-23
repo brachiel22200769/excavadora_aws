@@ -20,7 +20,17 @@ COMANDOS_BASE_EXCAVADORA = [
     (12, "BRAZO DERECHA",     "Brazo der"),
     (13, "DETENIDO",          "Detener"),
 ]
-
+# (codigo_comando, orden, duracion_ms, pausa_ms)
+DEMO_DEFAULT_PASOS = [
+    (7,  1, 800,  300),  # LUZ
+    (2,  2, 1500, 400),  # AVANZANDO
+    (9,  3, 1200, 300),  # BRAZO IZQUIERDA
+    (10, 4, 1200, 300),  # GARRA ARRIBA
+    (11, 5, 1200, 300),  # GARRA ABAJO
+    (12, 6, 1200, 300),  # BRAZO DERECHA
+    (3,  7, 1500, 400),  # RETROCEDIENDO
+    (5,  8, 800,  200),  # SONIDO
+]
 class DBService:
     def __init__(self):
         self.config = {
@@ -171,6 +181,51 @@ class DBService:
         finally:
             cursor.close()
             conn.close()
+
+
+    def asegurar_demo_default(self, id_vehiculo: int):
+        """Crea una Demo de Fábrica con pasos estándar si el vehículo aún no tiene demos."""
+        existentes = self.ejecutar_consulta(
+            "SELECT COUNT(*) AS total FROM demos WHERE id_vehiculo = %s",
+            (id_vehiculo,),
+        )
+        if existentes and existentes[0]["total"] > 0:
+            return
+
+        self.clonar_comandos_base(id_vehiculo)
+        comandos = self.ejecutar_consulta(
+            "SELECT codigo, id_comando FROM comandos WHERE id_vehiculo = %s AND activo = TRUE",
+            (id_vehiculo,),
+        )
+        mapa = {c["codigo"]: c["id_comando"] for c in comandos}
+        if not mapa:
+            return
+
+        res = self.llamar_sp_escritura(
+            "sp_crear_demo",
+            [id_vehiculo, "Demo de Fábrica", "Secuencia predeterminada de exhibición y prueba"],
+        )
+        id_demo = res.get("id_demo") if isinstance(res, dict) else None
+        if not id_demo:
+            return
+
+        self.ejecutar_escritura(
+            "UPDATE demos SET tipo_demo = 'EMPRESA', id_usuario_creador = NULL WHERE id_demo = %s",
+            (id_demo,),
+        )
+        for codigo, orden, duracion_ms, pausa_ms in DEMO_DEFAULT_PASOS:
+            id_cmd = mapa.get(codigo)
+            if id_cmd:
+                self.llamar_sp_escritura(
+                    "sp_agregar_movimiento_demo",
+                    [id_demo, id_cmd, orden, duracion_ms, pausa_ms],
+    )
+
+    def asegurar_demos_vehiculos_existentes(self):
+        """Asigna la Demo de Fábrica a todas las unidades actuales que no tengan demos."""
+        vehiculos = self.ejecutar_consulta("SELECT id_vehiculo FROM vehiculos")
+        for v in vehiculos:
+            self.asegurar_demo_default(v["id_vehiculo"])
 
     def registrar_auditoria(
         self,
